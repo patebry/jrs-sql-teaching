@@ -1,6 +1,7 @@
 const { createConnection } = require('promise-mysql')
 const { keys } = require('ramda')
 const buildQuery = require('./buildQuery')
+const getBody = require('./getBody')
 
 const listUsers = (req, res) => {
   let db
@@ -47,25 +48,10 @@ const createUser = (req, res) => {
     'email',
     'birthday'
   ]
-  const bodyKeys = keys(body)
-  let errorKeys = []
-  requiredFields.map(x => {
-    if (!bodyKeys.includes(x)) {
-      errorKeys.push(x)
-    }
-  })
-  if (errorKeys.length > 0) {
-    return res.send({
-      error: `required fields (${errorKeys.toString()}) were not sent`
-    })
-  } else {
-    const newBody = body
-    body = {}
-    allowedFields.map(x => {
-      if (newBody.hasOwnProperty(x)) {
-        body[x] = newBody[x]
-      }
-    })
+  try {
+    body = getBody(body, allowedFields, requiredFields)
+  } catch (err) {
+    return res.send({ message: err.message })
   }
 
   createConnection({ user: 'root', password: 'password', database: 'test' })
