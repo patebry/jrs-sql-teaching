@@ -17,6 +17,7 @@ const listUsers = (req, res) => {
     .catch(err => {
       db.end()
       console.log(err)
+      res.send({ error: err })
     })
 }
 
@@ -35,6 +36,7 @@ const getUser = (req, res) => {
     .catch(err => {
       db.end()
       console.log(err)
+      res.send({ error: err })
     })
 }
 
@@ -68,11 +70,48 @@ const createUser = (req, res) => {
     .catch(err => {
       db.end()
       console.log(err)
+      res.send({ error: err })
+    })
+}
+
+const updateUser = (req, res) => {
+  const userId = req.params.id
+  let body = req.body
+  const requiredFields = []
+  const allowedFields = [
+    'first_name',
+    'last_name',
+    'phone',
+    'email',
+    'birthday'
+  ]
+  try {
+    body = getBody(body, allowedFields, requiredFields)
+  } catch (err) {
+    return res.send({ message: err.message })
+  }
+  createConnection({ user: 'root', password: 'password', database: 'test' })
+    .then(conn => {
+      db = conn
+      return db.query(buildQuery.update('users', body, userId))
+    })
+    .then(result => {
+      db.end()
+      // if (result.affectedRows >= 1) {
+      //   res.send({ message: `User created with id: ${result.insertId}` })
+      // }
+      res.send({ message: `User updated with id: ${userId}` })
+    })
+    .catch(err => {
+      db.end()
+      console.log(err)
+      res.send({ error: err })
     })
 }
 
 module.exports = {
   listUsers,
   getUser,
-  createUser
+  createUser,
+  updateUser
 }
